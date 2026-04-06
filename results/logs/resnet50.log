@@ -1,0 +1,12 @@
+2026-04-06 17:37:14,619 | INFO | Epoch 1 | train_loss=0.5601 val_loss=0.5382 train_acc=0.7742 val_acc=0.7778
+2026-04-06 17:37:17,418 | INFO | Epoch 1 | train_loss=0.5602 val_loss=0.5194 train_acc=0.7740 val_acc=0.7778
+2026-04-06 18:01:48,863 | INFO | Epoch 2 | train_loss=0.5295 val_loss=0.5237 train_acc=0.7772 val_acc=0.7759
+2026-04-06 18:01:51,506 | INFO | Epoch 2 | train_loss=0.5301 val_loss=0.5180 train_acc=0.7772 val_acc=0.7778
+2026-04-06 19:44:15,876 | INFO | Epoch 1 | train_loss=0.5591 val_loss=0.5214 train_acc=0.7730 val_acc=0.7787
+2026-04-06 19:57:55,386 | INFO | Epoch 2 | train_loss=0.5285 val_loss=0.5310 train_acc=0.7758 val_acc=0.7778
+2026-04-06 20:13:50,065 | INFO | Epoch 3 | train_loss=0.5219 val_loss=0.5289 train_acc=0.7768 val_acc=0.7778
+2026-04-06 20:28:28,632 | INFO | Epoch 4 | train_loss=0.5196 val_loss=0.5230 train_acc=0.7764 val_acc=0.7704
+2026-04-06 20:42:17,857 | INFO | Epoch 5 | train_loss=0.5090 val_loss=0.5117 train_acc=0.7776 val_acc=0.7750
+2026-04-06 22:54:16,102 | INFO | Epoch 1 | train_loss=0.3002 val_loss=0.1467 train_acc=0.8947 val_acc=0.9417
+2026-04-06 23:07:14,416 | INFO | Epoch 2 | train_loss=0.1297 val_loss=0.0803 train_acc=0.9580 val_acc=0.9762
+2026-04-06 23:10:09,569 | INFO | Test Results | accuracy=0.9394, precision=0.9436, recall=0.9394, f1_score=0.9380, specificity=0.9798, auc_roc=0.9909

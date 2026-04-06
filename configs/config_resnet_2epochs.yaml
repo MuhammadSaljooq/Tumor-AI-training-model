@@ -1,0 +1,28 @@
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  img_size: 224
+  batch_size: 32
+  num_workers: 4
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+model:
+  num_classes: 4
+  classes:
+  - glioma
+  - meningioma
+  - pituitary
+  - no_tumor
+training:
+  epochs: 2
+  lr: 0.0003
+  weight_decay: 0.0001
+  patience: 8
+  device: cuda
+  use_class_weights: true
+  use_weighted_sampler: true
+paths:
+  checkpoints: results/checkpoints
+  plots: results/plots
+  logs: results/logs

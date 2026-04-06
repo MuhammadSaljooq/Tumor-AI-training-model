@@ -1,0 +1,2 @@
+2026-04-06 21:24:01,583 | INFO | Epoch 1 | train_loss=0.5597 val_loss=0.5325 train_acc=0.7728 val_acc=0.7778
+2026-04-06 21:53:13,974 | INFO | Epoch 2 | train_loss=0.5371 val_loss=0.5311 train_acc=0.7778 val_acc=0.7778
