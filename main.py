@@ -146,8 +146,8 @@ def train_and_evaluate_model(
             images = images.to(device, non_blocking=True)
             probs = torch.softmax(model(images), dim=1)
             y_scores.extend(probs.cpu().numpy())
-    metrics["y_true"] = torch.tensor(y_true).numpy()
-    metrics["y_scores"] = torch.tensor(y_scores).numpy()
+    metrics["y_true"] = torch.as_tensor(y_true).cpu().numpy()
+    metrics["y_scores"] = torch.as_tensor(y_scores).cpu().numpy()
 
     return {
         "model": model,

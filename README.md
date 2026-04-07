@@ -3,6 +3,12 @@
 Automated brain tumor classification project using MRI images and deep learning.
 The pipeline is designed to compare three model families under a unified training and evaluation flow.
 
+## Full Documentation
+
+For complete project documentation, see:
+
+- `docs/PROJECT_DOCUMENTATION.md`
+
 ## Models Used
 
 - **ResNet50**: Transfer learning with a CNN backbone pretrained on ImageNet.

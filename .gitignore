@@ -1,5 +1,6 @@
 data/
 results/checkpoints/
+results/logs/tensorboard/
 __pycache__/
 .env
 *.pyc

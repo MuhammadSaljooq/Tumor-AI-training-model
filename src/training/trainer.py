@@ -60,12 +60,14 @@ class ModelTrainer:
         avg_accuracy = correct / max(total, 1)
         return avg_loss, avg_accuracy
 
-    def validate(self, val_loader, criterion) -> tuple[float, float]:
+    def validate(self, val_loader, criterion) -> tuple[float, float, list[int], list[int]]:
         """Run validation loop under torch.no_grad()."""
         self.model.eval()
         running_loss = 0.0
         correct = 0
         total = 0
+        y_true: list[int] = []
+        y_pred: list[int] = []
 
         with torch.no_grad():
             progress = tqdm(val_loader, desc="Val", leave=False)
@@ -82,12 +84,14 @@ class ModelTrainer:
                 preds = torch.argmax(outputs, dim=1)
                 correct += (preds == labels).sum().item()
                 total += batch_size
+                y_true.extend(labels.cpu().numpy().tolist())
+                y_pred.extend(preds.cpu().numpy().tolist())
 
                 progress.set_postfix(loss=f"{loss.item():.4f}")
 
         avg_loss = running_loss / max(total, 1)
         avg_accuracy = correct / max(total, 1)
-        return avg_loss, avg_accuracy
+        return avg_loss, avg_accuracy, y_true, y_pred
 
     def train(self, train_loader, val_loader) -> dict:
         """Run full training with scheduler, early stopping, checkpointing, and logging."""
@@ -127,7 +131,7 @@ class ModelTrainer:
 
         for epoch in range(1, epochs + 1):
             train_loss, train_acc = self.train_one_epoch(train_loader, optimizer, criterion, scaler)
-            val_loss, val_acc = self.validate(val_loader, criterion)
+            val_loss, val_acc, y_true, y_pred = self.validate(val_loader, criterion)
             scheduler.step()
 
             history["train_losses"].append(train_loss)
@@ -137,6 +141,9 @@ class ModelTrainer:
 
             checkpoint.__call__(metric=val_loss, model=self.model, epoch=epoch)
             self.logger.log_metrics(epoch, train_loss, val_loss, train_acc, val_acc)
+            class_names = self.config.get("model", {}).get("classes")
+            if class_names and y_true:
+                self.logger.log_epoch_classification_metrics(epoch, y_true, y_pred, class_names)
 
             if early_stopping(val_loss):
                 self.logger.logger.info("Early stopping triggered at epoch %s.", epoch)

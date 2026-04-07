@@ -6,6 +6,8 @@ import csv
 import logging
 from pathlib import Path
 
+from sklearn.metrics import classification_report
+
 try:
     from torch.utils.tensorboard import SummaryWriter
 except ImportError:  # pragma: no cover
@@ -62,6 +64,47 @@ class ExperimentLogger:
             for metric_name, value in metrics_dict.items():
                 if isinstance(value, (int, float)):
                     self.writer.add_scalar(f"Test/{metric_name}", value)
+
+    def log_epoch_classification_metrics(self, epoch: int, y_true, y_pred, class_names: list[str]) -> None:
+        """Log epoch-level validation macro and per-class metrics."""
+        report = classification_report(
+            y_true,
+            y_pred,
+            target_names=class_names,
+            zero_division=0,
+            output_dict=True,
+        )
+        macro_precision = float(report.get("macro avg", {}).get("precision", 0.0))
+        macro_recall = float(report.get("macro avg", {}).get("recall", 0.0))
+        macro_f1 = float(report.get("macro avg", {}).get("f1-score", 0.0))
+        self.logger.info(
+            "Epoch %s | val_macro_precision=%.4f val_macro_recall=%.4f val_macro_f1=%.4f",
+            epoch,
+            macro_precision,
+            macro_recall,
+            macro_f1,
+        )
+
+        for class_name in class_names:
+            class_metrics = report.get(class_name, {})
+            precision = float(class_metrics.get("precision", 0.0))
+            recall = float(class_metrics.get("recall", 0.0))
+            f1_score = float(class_metrics.get("f1-score", 0.0))
+            support = int(class_metrics.get("support", 0))
+            self.logger.info(
+                "Epoch %s | class=%s precision=%.4f recall=%.4f f1=%.4f support=%d",
+                epoch,
+                class_name,
+                precision,
+                recall,
+                f1_score,
+                support,
+            )
+
+        if self.writer is not None:
+            self.writer.add_scalar("Validation/MacroPrecision", macro_precision, epoch)
+            self.writer.add_scalar("Validation/MacroRecall", macro_recall, epoch)
+            self.writer.add_scalar("Validation/MacroF1", macro_f1, epoch)
 
     def save_results_csv(self, results_dict, save_path) -> None:
         """Save all model results into a CSV file."""
