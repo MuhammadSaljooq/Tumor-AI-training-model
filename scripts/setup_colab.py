@@ -325,7 +325,16 @@ def main() -> None:
             flush=True,
         )
         print("  # data/processed not detected, so preprocessing step is enabled.", flush=True)
-    print()
+    print(
+        "\nColab notebooks: before `from src...`, run `%cd` to the repo root, e.g.:\n"
+        "  %cd /content/brain_tumor_classifier\n"
+        "Or set:\n"
+        "  import os, sys\n"
+        "  os.environ['BRAIN_TUMOR_CLASSIFIER_ROOT'] = '/content/brain_tumor_classifier'\n"
+        "  sys.path.insert(0, os.environ['BRAIN_TUMOR_CLASSIFIER_ROOT'])\n"
+        "`notebooks/experiments.ipynb` auto-detects the root once cwd is inside the repo.\n",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":
