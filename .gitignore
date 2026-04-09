@@ -4,3 +4,4 @@ results/logs/tensorboard/
 __pycache__/
 .env
 *.pyc
+.DS_Store

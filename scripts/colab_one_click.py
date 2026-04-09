@@ -107,6 +107,38 @@ def safe_link(dest: Path, source: Path, force: bool) -> None:
     print(f"Linked {dest} -> {source}", flush=True)
 
 
+def _has_any_images(root: Path) -> bool:
+    patterns = ("*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tif", "*.tiff", "*.webp")
+    for pat in patterns:
+        if any(root.rglob(pat)):
+            return True
+    return False
+
+
+def validate_dataset_availability(project_root: Path) -> bool:
+    """Return True if processed data exists, otherwise ensure raw data is available."""
+    processed_dir = project_root / "data" / "processed"
+    raw_dir = project_root / "data" / "raw"
+
+    if processed_dir.exists() and _has_any_images(processed_dir):
+        print(f"Using processed dataset: {processed_dir}", flush=True)
+        return True
+
+    if raw_dir.exists() and _has_any_images(raw_dir):
+        print(f"Processed data missing; using raw dataset for preprocessing: {raw_dir}", flush=True)
+        return False
+
+    raise SystemExit(
+        "Dataset not found. Provide one of:\n"
+        "  1) --processed-data \"/content/drive/MyDrive/.../processed\" (preferred)\n"
+        "  2) --raw-data \"/content/drive/MyDrive/.../raw\"\n"
+        "Current paths checked:\n"
+        f"  - {processed_dir}\n"
+        f"  - {raw_dir}\n"
+        "No image files were detected."
+    )
+
+
 def write_runtime_config(
     project_root: Path,
     *,
@@ -195,7 +227,7 @@ def main() -> None:
         lr=args.lr,
     )
 
-    has_processed = (project_root / "data" / "processed").exists()
+    has_processed = validate_dataset_availability(project_root)
     cmd = [
         sys.executable,
         "main.py",
