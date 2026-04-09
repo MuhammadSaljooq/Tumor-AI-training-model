@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Bootstrap this project inside Google Colab (clone, deps, dataset links, sanity checks).
 
+Fastest path: open ``notebooks/Colab_Quickstart.ipynb`` in Colab, choose GPU, **Run all**.
+
 Typical Colab workflow (GPU runtime recommended):
 
   from google.colab import drive
@@ -61,14 +63,16 @@ def _try_mount_google_drive() -> None:
 def _resolve_project_root(explicit: Path | None, clone_dir: Path) -> Path:
     if explicit is not None:
         root = explicit.resolve()
-        if not (root / "main.py").is_file():
-            raise SystemExit(f"--project-root is not the repo root (missing main.py): {root}")
+        if not (root / "main.py").is_file() or not (root / "src").is_dir():
+            raise SystemExit(
+                f"--project-root is not the repo root (need main.py + src/): {root}"
+            )
         return root
     here = Path.cwd().resolve()
-    if (here / "main.py").is_file() and (here / "configs" / "config.yaml").is_file():
+    if (here / "main.py").is_file() and (here / "src").is_dir():
         return here
     candidate = clone_dir.resolve()
-    if (candidate / "main.py").is_file():
+    if (candidate / "main.py").is_file() and (candidate / "src").is_dir():
         return candidate
     raise SystemExit(
         "Could not find project root. Run from the repo directory, or pass "

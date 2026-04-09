@@ -94,6 +94,12 @@ If someone clones this repo and wants to run it quickly, use:
 bash setup_and_run.sh
 ```
 
+### Google Colab (one-click)
+
+Open **`notebooks/Colab_Quickstart.ipynb`** in Colab: set **GPU** runtime, then **Run all**, and fill in `PROCESSED_DATA_PATH` if your data is on Google Drive.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MuhammadSaljooq/Tumor-AI-training-model/blob/google-colab/notebooks/Colab_Quickstart.ipynb)
+
 This script will:
 
 1. Create `.venv` if needed
