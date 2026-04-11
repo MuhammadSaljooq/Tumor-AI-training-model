@@ -16,7 +16,8 @@ def plot_confusion_matrix(y_true, y_pred, class_names, model_name, save_path) ->
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
-    cm = confusion_matrix(y_true, y_pred)
+    labels = list(range(len(class_names)))
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
 
     plt.figure(figsize=(8, 6))
     sns.heatmap(
@@ -48,9 +49,14 @@ def plot_roc_curves(y_true, y_scores, class_names, model_names, save_path) -> No
     if isinstance(y_scores, dict):
         scores_by_model = {name: np.asarray(y_scores[name]) for name in model_names if name in y_scores}
     else:
+        score_seq = list(y_scores)
+        if len(score_seq) != len(model_names):
+            raise ValueError(
+                f"plot_roc_curves: len(model_names)={len(model_names)} != len(y_scores)={len(score_seq)}; "
+                "align scores with model order or pass y_scores as a dict keyed by model name."
+            )
         scores_by_model = {
-            model_name: np.asarray(scores)
-            for model_name, scores in zip(model_names, y_scores, strict=False)
+            name: np.asarray(scores) for name, scores in zip(model_names, score_seq)
         }
 
     colors = plt.cm.tab10(np.linspace(0, 1, max(1, len(model_names))))

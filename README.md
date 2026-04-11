@@ -21,7 +21,9 @@ Expected classes:
 - `pituitary`
 - `no_tumor`
 
-Place the dataset in:
+Place the dataset in either layout:
+
+**Flat (class folders at the root of `data/raw`):**
 
 ```text
 data/raw/
@@ -30,6 +32,160 @@ data/raw/
   pituitary/
   no_tumor/
 ```
+
+**Kaggle-style (splits under `data/raw`):**
+
+```text
+data/raw/
+  Training/
+    glioma/
+    meningioma/
+    pituitary/
+    notumor/
+  Testing/
+    ...
+```
+
+The folder name `notumor` is treated as `no_tumor`.
+
+---
+
+## CLI quick start: setup, training, and checkpoints
+
+Use these commands from the **repository root** (replace the `cd` path with your clone location).
+
+### 1. Environment setup (from scratch)
+
+```bash
+cd "/path/to/Tumor-AI-training-model"
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Windows (PowerShell): `\.venv\Scripts\Activate.ps1` instead of `source .venv/bin/activate`.
+
+### 2. Point data at your dataset (optional)
+
+By default `configs/config.yaml` uses `data/raw`. To use another folder (e.g. Kaggle extract), pass **`--data_dir`** to the same commands below.
+
+**First time** with that folder (must preprocess into `data/processed`):
+
+```bash
+python main.py --data_dir "/path/to/dataset_root"
+```
+
+**After** `data/processed` is populated, add **`--skip_preprocessing`** to save time:
+
+```bash
+python main.py --data_dir "/path/to/dataset_root" --skip_preprocessing
+```
+
+### 3. First full run: preprocess + train + evaluate
+
+Trains **all three** models (`resnet50`, `vit`, `hybrid`) using `configs/config.yaml`:
+
+```bash
+source .venv/bin/activate
+python main.py --config configs/config.yaml
+```
+
+Train **one** model only (example: hybrid):
+
+```bash
+python main.py --config configs/config.yaml --models hybrid
+```
+
+Shorter trial (2 epochs, ResNet only):
+
+```bash
+python main.py --config configs/config_resnet_2epochs.yaml --models resnet50
+```
+
+### 4. Later runs (processed data already exists)
+
+```bash
+source .venv/bin/activate
+python main.py --config configs/config.yaml --skip_preprocessing
+```
+
+Hybrid only, custom epoch count:
+
+```bash
+python main.py --models hybrid --skip_preprocessing --epochs 10
+```
+
+### 4b. Save a checkpoint after every epoch (resume next run)
+
+In `configs/config.yaml`, **`training.save_last_checkpoint`** is **`true`** by default in this repo. Each finished epoch overwrites:
+
+`results/checkpoints/{model}_last.pth`
+
+with the same full training state as the best checkpoint (weights, optimizer, scheduler, scaler on CUDA, etc.).  
+`{model}_best.pth` is still updated only when validation loss improves.
+
+**Continue training** from the last epoch (use **one** model, same config/architecture):
+
+```bash
+python main.py --models hybrid --resume results/checkpoints/hybrid_last.pth --skip_preprocessing
+```
+
+If the previous run already reached `training.epochs`, increase epochs in the YAML or pass e.g. `--epochs 50` before resuming.
+
+Set `save_last_checkpoint: false` in config if you want to skip the extra disk write each epoch (large models = large files).
+
+### 5. Confirm checkpoints and outputs
+
+Check that best weights exist (names match `--models`):
+
+```bash
+ls -la results/checkpoints/
+```
+
+You should see files such as:
+
+- `resnet50_best.pth`, `vit_best.pth`, `hybrid_best.pth` — best validation loss so far
+- `resnet50_last.pth`, … — **only if** `save_last_checkpoint: true`; latest epoch for resume
+
+Optional: print checkpoint metadata (requires the same venv / PyTorch):
+
+```bash
+python -c "
+from pathlib import Path
+import torch
+for p in sorted(Path('results/checkpoints').glob('*_best.pth')):
+    ck = torch.load(p, map_location='cpu')
+    if isinstance(ck, dict):
+        print(p.name, '| epoch=', ck.get('epoch'), '| model_name=', ck.get('model_name'), '| keys:', 'ok' if 'model_state_dict' in ck else 'missing model_state_dict')
+    else:
+        print(p.name, '| legacy format (state_dict only)')
+"
+```
+
+Checkpoints are trusted local files; only inspect files you created.
+
+Other artifacts:
+
+- Plots: `results/plots/` (confusion matrices, ROC, `model_comparison.png`, …)
+- Logs: `results/logs/`
+- Summary CSV: `results/final_results.csv`
+
+### 6. Evaluate only (load checkpoints, no training)
+
+```bash
+python main.py --skip_preprocessing --evaluate_only --models resnet50
+```
+
+Use one model at a time if you only have that checkpoint.
+
+### 7. Sanity-check tests
+
+```bash
+pytest tests/ -q
+```
+
+---
 
 ## Project Structure
 
@@ -57,28 +213,17 @@ brain_tumor_classifier/
 
 ## Setup Instructions
 
-1. Create and activate a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Verify configuration in `configs/config.yaml`.
+Follow **[CLI quick start](#cli-quick-start-setup-training-and-checkpoints)** (venv, `pip install`, then `python main.py`). Verify paths and classes in `configs/config.yaml` before long runs.
 
 ## How to Run
 
-Run the main pipeline:
+Default entry (preprocess + train all models + evaluate):
 
 ```bash
 python main.py
 ```
+
+Same as `python main.py --config configs/config.yaml` with default `--models resnet50 vit hybrid`.
 
 ### One-command setup + run (recommended for GitHub users)
 
@@ -127,3 +272,42 @@ Includes:
 - Model class metadata
 - Training hyperparameters
 - Output directories for checkpoints, plots, and logs
+- `training.device`: `auto` (CUDA, else MPS, else CPU), or force `cuda` / `mps` / `cpu`
+- `training.seed` and optional `training.cudnn_deterministic` (CUDA reproducibility; can reduce speed)
+- `training.min_delta`: minimum validation-loss improvement for a new best checkpoint (aligned with early stopping)
+- `training.save_last_checkpoint`: default **`true`** — writes `results/checkpoints/{model}_last.pth` after every epoch so you can **`--resume`**; set `false` to save disk I/O on huge models
+
+## Checkpoints and resume
+
+Checkpoints are **trusted local files** (full Python pickles). Only load files you created.
+
+**Artifacts**
+
+- `{model}_best.pth` — best validation loss so far, written atomically (temp file then rename). Contains `model_state_dict`, `optimizer_state_dict`, `scheduler_state_dict`, `scaler_state_dict` (CUDA AMP only), `epoch` (last completed epoch when saved), `best_metric`, `best_epoch`, `model_name`, `torch_version`, and a small `training_snapshot`.
+- `{model}_last.pth` — optional; same schema, overwritten each epoch when `save_last_checkpoint: true`.
+
+**Evaluation without training**
+
+```bash
+python main.py --models resnet50 --evaluate_only
+```
+
+**Resume training** (same config and architecture as the run that produced the file; use **exactly one** model):
+
+```bash
+python main.py --models hybrid --resume results/checkpoints/hybrid_last.pth --skip_preprocessing
+```
+
+**Override epochs**
+
+```bash
+python main.py --models resnet50 --epochs 5 --skip_preprocessing
+```
+
+**Tests**
+
+```bash
+pytest tests/ -q
+# or
+python -m unittest discover tests -v
+```

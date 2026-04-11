@@ -19,7 +19,11 @@ training:
   lr: 0.0003
   weight_decay: 0.0001
   patience: 8
-  device: cuda
+  min_delta: 0.001
+  device: auto
+  seed: 42
+  cudnn_deterministic: false
+  save_last_checkpoint: true
   use_class_weights: true
   use_weighted_sampler: true
 paths:

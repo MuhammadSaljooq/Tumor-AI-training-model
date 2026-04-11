@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 from pathlib import Path
 
+import numpy as np
 import torch
 import yaml
 
@@ -22,6 +24,7 @@ from src.utils import (
     plot_roc_curves,
     plot_training_history,
 )
+from src.utils.checkpoint_io import load_checkpoint
 
 
 def load_config(config_path: str) -> dict:
@@ -36,6 +39,40 @@ def setup_directories(config: dict) -> None:
         os.makedirs(dir_path, exist_ok=True)
 
 
+def set_seed(seed: int, cudnn_deterministic: bool = False) -> None:
+    """Seed Python, NumPy, and PyTorch for reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    if cudnn_deterministic and torch.cuda.is_available():
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+def resolve_device(preference: str | None) -> str:
+    """Pick compute device from config: cuda, mps, cpu, or auto (CUDA then MPS then CPU)."""
+    pref = (preference or "auto").lower().strip()
+    if pref == "cuda":
+        if torch.cuda.is_available():
+            return "cuda"
+        raise RuntimeError("training.device is 'cuda' but CUDA is not available.")
+    if pref == "mps":
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return "mps"
+        raise RuntimeError("training.device is 'mps' but MPS is not available.")
+    if pref == "cpu":
+        return "cpu"
+    if pref != "auto":
+        raise ValueError(f"Unknown training.device value: {preference!r}. Use auto, cuda, mps, or cpu.")
+    if torch.cuda.is_available():
+        return "cuda"
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def train_and_evaluate_model(
     model_name,
     train_loader,
@@ -44,6 +81,7 @@ def train_and_evaluate_model(
     config,
     device,
     class_names,
+    resume_path: str | None = None,
 ) -> dict:
     """Train/evaluate one model and generate per-model artifacts."""
     num_classes = int(config["model"]["num_classes"])
@@ -70,7 +108,7 @@ def train_and_evaluate_model(
                 f"Checkpoint not found for evaluate_only mode: {checkpoint_path}"
             )
         print(f"Loading checkpoint: {checkpoint_path}")
-        state = torch.load(checkpoint_path, map_location=device)
+        state = load_checkpoint(checkpoint_path, map_location=device, weights_only=False)
         if isinstance(state, dict) and "model_state_dict" in state:
             model.load_state_dict(state["model_state_dict"])
         else:
@@ -79,7 +117,11 @@ def train_and_evaluate_model(
         trainer_config = dict(config)
         trainer_config["model_name"] = model_name
         trainer = ModelTrainer(model=model, config=trainer_config, device=device, logger=model_logger)
-        history = trainer.train(train_loader=train_loader, val_loader=val_loader)
+        history = trainer.train(
+            train_loader=train_loader,
+            val_loader=val_loader,
+            resume_path=resume_path,
+        )
 
     metrics = evaluate_model(
         model=model,
@@ -173,16 +215,38 @@ def main():
         action="store_true",
         help="Skip training, load checkpoints and evaluate",
     )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=None,
+        help="Override training.epochs in the config (e.g. --epochs 1)",
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Path to a training checkpoint (.pth) to resume; requires exactly one --models entry",
+    )
     args = parser.parse_args()
+
+    if args.resume is not None and len(args.models) != 1:
+        parser.error("--resume requires exactly one model in --models")
 
     config = load_config(args.config)
     if args.data_dir:
         config["data"]["raw_dir"] = args.data_dir
+    if args.epochs is not None:
+        config["training"]["epochs"] = int(args.epochs)
     config["evaluate_only"] = args.evaluate_only
+
+    training_cfg = config.setdefault("training", {})
+    seed = training_cfg.get("seed")
+    if seed is not None:
+        set_seed(int(seed), bool(training_cfg.get("cudnn_deterministic", False)))
 
     setup_directories(config)
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = resolve_device(training_cfg.get("device"))
     print(f"Using device: {device}")
 
     data_cfg = config["data"]
@@ -213,6 +277,7 @@ def main():
             config=config,
             device=device,
             class_names=class_names,
+            resume_path=args.resume,
         )
 
         metrics = model_output["metrics"]
