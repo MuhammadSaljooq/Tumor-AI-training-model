@@ -54,10 +54,10 @@ The folder name `notumor` is treated as `no_tumor`.
 
 1. Upload the notebook **[`notebooks/Colab_Tumor_AI_Training.ipynb`](notebooks/Colab_Tumor_AI_Training.ipynb)** to Colab (or open from GitHub with Colab if you enable that).
 2. **Runtime → Change runtime type → GPU.**
-3. Run cells top to bottom. In **User settings**, choose `DATA_SOURCE`: `kaggle` (upload `kaggle.json` when prompted), `drive` (set `DRIVE_DATA_PATH` to a folder with `Training/` / `Testing/`), or `already_cloned` if you manage `data/raw` yourself.
-4. Training uses **[`configs/config_colab.yaml`](configs/config_colab.yaml)** (`device: auto`, `batch_size: 16`, `num_workers: 2`, default **2 epochs** — edit the YAML or set `EXTRA_ARGS` in the notebook, e.g. `--epochs 10`).
+3. Run the **single code cell** (after the short intro markdown). At the top of that cell, edit **`EPOCHS`**, **`MODELS`** (e.g. `resnet50`, or `"resnet50 vit"` for two models), and **`DATA_SOURCE`**: `kaggle` (put `kaggle.json` on Drive at `KAGGLE_JSON_DRIVE`, or upload when prompted) or **`drive`** (set **`DRIVE_DATA_PATH`** to the mounted path of a folder containing **`Training/`** / **`Testing/`** — e.g. `/content/drive/MyDrive/...` or a **shared drive** `/content/drive/Shareddrives/<Name>/...`). Optional **`DRIVE_USE_IN_PLACE`**: `True` reads raw data directly from Drive via **`--data_dir`** (saves disk; can be slower); `False` copies into `data/raw/` first. The cell mounts Google Drive, clones the repo, installs dependencies, prepares data, runs `main.py`, and prints **`results/final_results.csv`** when training finishes.
+4. Other hyperparameters remain in **[`configs/config_colab.yaml`](configs/config_colab.yaml)** (`device: auto`, `batch_size: 16`, `num_workers: 2`, etc.). Optional: **`EXTRA_ARGS`** in the notebook, e.g. `--resume results/checkpoints/resnet50_last.pth`.
 
-The notebook clones this repo (default branch **`checkpoint_added`**) into `/content/Tumor-AI-training-model`, installs `requirements.txt` + `kaggle`, downloads/extracts the dataset, then runs `python main.py`.
+The notebook clones this repo (default branch **`checkpoint_added`**) into `/content/Tumor-AI-training-model`, installs `requirements.txt` (and **`kaggle`** only when using **`DATA_SOURCE = "kaggle"`**), downloads or copies the dataset, then runs `python main.py --epochs … --models …` (and **`--data_dir`** when using Drive in-place mode).
 
 ---
 
