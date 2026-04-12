@@ -21,7 +21,7 @@ The cell runs **top to bottom** in one shot. Rough flow:
 | 5 | **Load** [`configs/config_colab.yaml`](../configs/config_colab.yaml), **merge** your Python variables (hyperparameters, optional Drive results paths), and **write** **`configs/config_colab_runtime.yaml`**. That file is **regenerated every run** and is what `main.py` reads. |
 | 6 | **Prepare data:** either download/extract from Kaggle into `data/raw/`, or copy / point at Drive (see below). |
 | 7 | **Build the `main.py` command:** `--config` runtime YAML, `--models`, `--epochs`, optional `--data_dir`, optional **`--resume`** (see [Checkpoints and resume](#checkpoints-and-resume)). |
-| 8 | **Run training** in the repo root. When finished, the cell prints **`final_results.csv`** if it exists (path depends on `RESULTS_DRIVE_DIR`). |
+| 8 | **Run training** in the repo root with **`python -u`** and **`PYTHONUNBUFFERED=1`** so **tqdm batch progress** and log lines **stream live** in the Colab output (not buffered until the end). When finished, the cell prints **`final_results.csv`** if it exists (path depends on `RESULTS_DRIVE_DIR`). |
 
 There is no separate “setup cell”: everything lives in that one code cell.
 
@@ -109,6 +109,7 @@ With **`RESULTS_DRIVE_DIR = "/content/drive/MyDrive/TumorAI_results"`** (example
 | Training never resumes | Set **`RESULTS_DRIVE_DIR`** so `*_last.pth` survives; use **one** model in **`MODELS`**; ensure **`RESUME_IF_CHECKPOINT_EXISTS`** is **`True`**. |
 | “Starting from epoch 1” every time | Expected if checkpoints were only on the VM disk and the runtime was recycled. Use Drive for **`RESULTS_DRIVE_DIR`**. |
 | Duplicate **`--resume`** error | Remove **`--resume`** from **`EXTRA_ARGS`** when using auto-resume, or set **`RESUME_IF_CHECKPOINT_EXISTS = False`** and pass **`--resume`** only in **`EXTRA_ARGS`**. |
+| No training progress until the run finishes | Pull the latest repo (notebook uses **`python -u`** + unbuffered env). The trainer prints **tqdm** bars per batch to **stdout**. |
 | Preprocessing / split changes ignored | Delete **`data/processed/`** in the clone before re-running so splits are rebuilt. |
 | ViT accuracy low with few epochs | Increase **`EPOCHS`**, lower **`LR`**, and see the hints above. |
 

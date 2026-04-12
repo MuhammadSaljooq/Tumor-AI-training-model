@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -58,7 +59,14 @@ class ModelTrainer:
         correct = 0
         total = 0
 
-        progress = tqdm(train_loader, desc="Train", leave=False)
+        progress = tqdm(
+            train_loader,
+            desc="Train",
+            leave=False,
+            file=sys.stdout,
+            dynamic_ncols=True,
+            mininterval=0.2,
+        )
         for images, labels in progress:
             images = images.to(self.device, non_blocking=True)
             labels = labels.to(self.device, non_blocking=True)
@@ -92,7 +100,14 @@ class ModelTrainer:
         total = 0
 
         with torch.no_grad():
-            progress = tqdm(val_loader, desc="Val", leave=False)
+            progress = tqdm(
+                val_loader,
+                desc="Val",
+                leave=False,
+                file=sys.stdout,
+                dynamic_ncols=True,
+                mininterval=0.2,
+            )
             for images, labels in progress:
                 images = images.to(self.device, non_blocking=True)
                 labels = labels.to(self.device, non_blocking=True)
