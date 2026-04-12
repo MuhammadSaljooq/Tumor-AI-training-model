@@ -311,9 +311,10 @@ def main():
     print_results_table(compact_results)
 
     final_logger = ExperimentLogger(log_dir=config["paths"]["logs"], model_name="final_results")
+    final_results_dir = Path(config.get("paths", {}).get("final_results_parent", "results"))
     final_logger.save_results_csv(
         results_dict=compact_results,
-        save_path=Path("results") / "final_results.csv",
+        save_path=final_results_dir / "final_results.csv",
     )
 
 

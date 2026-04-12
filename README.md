@@ -52,12 +52,13 @@ The folder name `notumor` is treated as `no_tumor`.
 
 ## Google Colab (one-click style)
 
-1. Upload the notebook **[`notebooks/Colab_Tumor_AI_Training.ipynb`](notebooks/Colab_Tumor_AI_Training.ipynb)** to Colab (or open from GitHub with Colab if you enable that).
+1. Upload **[`notebooks/Colab_Tumor_AI_Training.ipynb`](notebooks/Colab_Tumor_AI_Training.ipynb)** to Colab (or open from GitHub with Colab if you enable that).
 2. **Runtime → Change runtime type → GPU.**
-3. Run the **single code cell** (after the short intro markdown). Edit **`EPOCHS`**, **`MODELS`**, the **hyperparameter block** (`LR`, `WEIGHT_DECAY`, `BATCH_SIZE`, `IMG_SIZE`, `NUM_WORKERS`, `PATIENCE`, `MIN_DELTA`, `SEED`, `USE_CLASS_WEIGHTS`, `USE_WEIGHTED_SAMPLER`, `SAVE_LAST_CHECKPOINT`, and optional **`TRAIN_SPLIT` / `VAL_SPLIT` / `TEST_SPLIT`**), and **`DATA_SOURCE`**: `kaggle` (put `kaggle.json` on Drive at `KAGGLE_JSON_DRIVE`, or upload when prompted) or **`drive`** (set **`DRIVE_DATA_PATH`**, optional **`DRIVE_USE_IN_PLACE`**). The cell writes **`configs/config_colab_runtime.yaml`** (merged from [`configs/config_colab.yaml`](configs/config_colab.yaml) + your edits), then runs **`main.py --config configs/config_colab_runtime.yaml --epochs … --models …`** and prints **`results/final_results.csv`**.
-4. **Tuning tips (Colab GPU):** For **ViT**, try **`LR`** `1e-4` or `5e-5`, **`EPOCHS`** 30–50, **`BATCH_SIZE`** 32 if memory allows (else 8–16). For **ResNet50**, **`LR`** `3e-4` and **`BATCH_SIZE`** 16–32 are strong defaults. If you change **split** fractions, remove **`data/processed/`** before the next run so preprocessing rebuilds. Optional: **`EXTRA_ARGS`**, e.g. `--resume results/checkpoints/resnet50_last.pth`.
+3. Run the **single code cell** (after the intro markdown). Edit the variables at the top (**`EPOCHS`**, **`MODELS`**, **`RESULTS_DRIVE_DIR`**, hyperparameters, **`DATA_SOURCE`**, etc.), then execute.
 
-The notebook clones this repo (default branch **`checkpoint_added`**) into `/content/Tumor-AI-training-model`, installs `requirements.txt` (and **`kaggle`** only when using **`DATA_SOURCE = "kaggle"`**), downloads or copies the dataset, then runs training with the runtime config above (and **`--data_dir`** when using Drive in-place mode).
+**Full walkthrough** (how the cell works, checkpoints on Drive, resume, data modes, troubleshooting): **[`notebooks/README_COLAB.md`](notebooks/README_COLAB.md)**.
+
+Short version: the cell mounts Drive, clones/updates this repo (branch **`checkpoint_added`**), merges your settings into **`configs/config_colab_runtime.yaml`**, prepares data, and runs **`main.py`**. Use **`RESULTS_DRIVE_DIR`** on Google Drive so checkpoints survive new Colab sessions; **`RESUME_IF_CHECKPOINT_EXISTS`** adds **`--resume`** when **`{model}_last.pth`** exists (single model only). **`SAVE_LAST_CHECKPOINT = True`** refreshes **`_last.pth` every epoch**.
 
 ---
 
