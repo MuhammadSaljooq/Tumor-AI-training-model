@@ -50,6 +50,17 @@ The folder name `notumor` is treated as `no_tumor`.
 
 ---
 
+## Google Colab (one-click style)
+
+1. Upload the notebook **[`notebooks/Colab_Tumor_AI_Training.ipynb`](notebooks/Colab_Tumor_AI_Training.ipynb)** to Colab (or open from GitHub with Colab if you enable that).
+2. **Runtime → Change runtime type → GPU.**
+3. Run cells top to bottom. In **User settings**, choose `DATA_SOURCE`: `kaggle` (upload `kaggle.json` when prompted), `drive` (set `DRIVE_DATA_PATH` to a folder with `Training/` / `Testing/`), or `already_cloned` if you manage `data/raw` yourself.
+4. Training uses **[`configs/config_colab.yaml`](configs/config_colab.yaml)** (`device: auto`, `batch_size: 16`, `num_workers: 2`, default **2 epochs** — edit the YAML or set `EXTRA_ARGS` in the notebook, e.g. `--epochs 10`).
+
+The notebook clones this repo (default branch **`checkpoint_added`**) into `/content/Tumor-AI-training-model`, installs `requirements.txt` + `kaggle`, downloads/extracts the dataset, then runs `python main.py`.
+
+---
+
 ## CLI quick start: setup, training, and checkpoints
 
 Use these commands from the **repository root** (replace the `cd` path with your clone location).
