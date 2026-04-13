@@ -12,6 +12,14 @@ except ImportError:  # pragma: no cover
     SummaryWriter = None
 
 
+class _FlushStreamHandler(logging.StreamHandler):
+    """Emit and flush so notebook / Colab shows log lines immediately."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        super().emit(record)
+        self.flush()
+
+
 class ExperimentLogger:
     """Logs experiment metrics to console/file and optionally TensorBoard."""
 
@@ -27,7 +35,7 @@ class ExperimentLogger:
         if not self.logger.handlers:
             formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
             file_handler = logging.FileHandler(self.log_dir / f"{model_name}.log")
-            stream_handler = logging.StreamHandler()
+            stream_handler = _FlushStreamHandler()
             file_handler.setFormatter(formatter)
             stream_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)

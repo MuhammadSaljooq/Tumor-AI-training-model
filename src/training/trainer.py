@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +10,7 @@ import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from ..utils import ExperimentLogger
 from ..utils.checkpoint_io import load_checkpoint
@@ -63,9 +62,8 @@ class ModelTrainer:
             train_loader,
             desc="Train",
             leave=False,
-            file=sys.stdout,
             dynamic_ncols=True,
-            mininterval=0.2,
+            mininterval=0.15,
         )
         for images, labels in progress:
             images = images.to(self.device, non_blocking=True)
@@ -104,9 +102,8 @@ class ModelTrainer:
                 val_loader,
                 desc="Val",
                 leave=False,
-                file=sys.stdout,
                 dynamic_ncols=True,
-                mininterval=0.2,
+                mininterval=0.15,
             )
             for images, labels in progress:
                 images = images.to(self.device, non_blocking=True)
@@ -233,6 +230,7 @@ class ModelTrainer:
             return history
 
         for epoch in range(start_epoch, epochs + 1):
+            print(f"Epoch {epoch}/{epochs} — train / val", flush=True)
             train_loss, train_acc = self.train_one_epoch(train_loader, optimizer, criterion, scaler)
             val_loss, val_acc = self.validate(val_loader, criterion)
             scheduler.step()

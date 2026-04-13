@@ -1,0 +1,43 @@
+{
+  "description": "Metadata for Colab exports in this folder. Model weights are NOT inside the .ipynb files.",
+  "source_branch": "5-fold-optimization",
+  "colab_project_root": "/content/brain_tumor_classifier",
+  "processed_data_symlink": "/content/drive/MyDrive/MriDataset/processed",
+  "checkpoint_filenames_expected": {
+    "resnet50": ["resnet50_best.pth", "resnet50_last.pth"],
+    "vit": ["vit_best.pth", "vit_last.pth"]
+  },
+  "default_checkpoint_path_on_colab": "/content/brain_tumor_classifier/results/checkpoints",
+  "runs": [
+    {
+      "notebook": "BrainTumor_resnet50.ipynb",
+      "model": "resnet50",
+      "date_utc_approx": "2026-04-10",
+      "epochs_completed": 15,
+      "stopped_by": "early_stopping",
+      "logged_test_metrics": {
+        "accuracy": 0.9475,
+        "precision": 0.9527,
+        "recall": 0.9475,
+        "f1_score": 0.9466,
+        "specificity": 0.9825,
+        "auc_roc": 0.9889
+      }
+    },
+    {
+      "notebook": "BrainTumor_VIT.ipynb",
+      "model": "vit",
+      "date_utc_approx": "2026-04-10",
+      "epochs_completed": 30,
+      "stopped_by": "max_epochs_or_config",
+      "logged_test_metrics": {
+        "accuracy": 0.9156,
+        "precision": 0.9195,
+        "recall": 0.9156,
+        "f1_score": 0.9133,
+        "specificity": 0.9719,
+        "auc_roc": 0.983
+      }
+    }
+  ]
+}
