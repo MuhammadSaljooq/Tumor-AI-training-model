@@ -18,7 +18,7 @@ training:
   weight_decay: 0.0001
   patience: 8
   min_delta: 0.001
-  device: "cpu"
+  device: "auto"
   seed: 42
   cudnn_deterministic: false
   save_last_checkpoint: true

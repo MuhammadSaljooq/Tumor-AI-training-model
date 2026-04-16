@@ -112,7 +112,7 @@ python main.py --config configs/config.yaml --models hybrid
 Shorter trial (2 epochs, ResNet only):
 
 ```bash
-python main.py --config configs/config_resnet_2epochs.yaml --models resnet50
+python main.py --config configs/config.yaml --models resnet50 --epochs 2
 ```
 
 ### 4. Later runs (processed data already exists)
